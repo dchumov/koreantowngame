@@ -1,10 +1,10 @@
 # Korea Town MVP
 
-`React + TypeScript + Phaser 3`로 만든 Korea Town 생활형 한국어 MVP입니다.
+`React + TypeScript + Phaser 3`로 만든 Korea Town 생활형 한국어 학습 MVP입니다.
 
-플레이어는 마을 지도를 이동하고, NPC와 대화하고, 퀴즈를 풀고, 단어와 문장을 열고, 장소를 색으로 복원하고, 컬렉션을 모으고, 방을 꾸미고, 옷을 갈아입을 수 있습니다.
+플레이어는 마을을 이동하면서 NPC와 대화하고, 퀴즈를 풀고, 어휘와 문장을 해금하고, 장소의 회색 상태를 색으로 복원하고, 도감을 수집하고, 방을 꾸미고, 의상을 바꿀 수 있습니다.
 
-## 구현된 내용
+## 현재 구현 상태
 
 - 4개 장소: 기숙사, 편의점, 카페, 학교
 - 4명의 NPC: 유나, 민수, 지훈, 소라
@@ -20,6 +20,8 @@
 - 모바일 조작: 가상 조이스틱과 `E / 대화` 버튼
 
 ## 스크린샷
+
+스크린샷은 현재 로컬 빌드 기준으로 갱신되어 있습니다.
 
 ![Overview](./docs/screenshots/overview.png)
 
@@ -57,19 +59,19 @@ npm run preview
 ## 프로젝트 구조
 
 - `src/game/` — Phaser 씬, 엔티티, 상호작용 로직
-- `src/components/` — React UI: 대화, 퀴즈, 컬렉션, 방, 의상, mobile controls
+- `src/components/` — React UI: 대화, 퀴즈, 컬렉션, 방, 의상, 모바일 컨트롤
 - `src/content/` — NPC, 장소, 아이템, 문장, 어휘 데이터
 - `src/store/` — Zustand store와 저장 로직
 - `public/assets/` — 배경, 건물, 스프라이트
 
-## 콘텐츠
+## 주요 데이터
 
-주요 데이터는 다음 파일에 있습니다:
+주요 데이터는 다음 파일에 있습니다.
 
 - `src/content/interactions.ts`
 - `src/content/vocabulary.ts`
 
-`interactions.ts`에는 다음이 들어 있습니다:
+`interactions.ts`에는 다음이 들어 있습니다.
 
 - 장소와 NPC 설정
 - 16개 상호작용
@@ -79,7 +81,7 @@ npm run preview
 
 ## 저장
 
-이 게임은 Zustand `persist`를 사용하며 상태를 다음 키로 저장합니다:
+이 게임은 Zustand `persist`를 사용하며 상태를 다음 키로 저장합니다.
 
 ```txt
 korea-town-storage
@@ -98,28 +100,30 @@ korea-town-storage
 
 ## 배포
 
-다음 파일이 준비되어 있습니다:
+배포용 설정 파일이 준비되어 있습니다.
 
 - `netlify.toml`
 - `.github/workflows/deploy-netlify.yml`
 
-Netlify 자동 배포를 사용하려면 다음이 필요합니다:
+Netlify 자동 배포를 사용하려면 다음이 필요합니다.
 
 - `main` 브랜치가 있는 Git 저장소
 - `NETLIFY_AUTH_TOKEN` secret
 - `NETLIFY_SITE_ID` secret
 
-저장소를 연결하면 `main`으로 push할 때 workflow가 `dist/`를 배포합니다.
+저장소를 연결하면 `main`으로 push할 때 `dist/`가 배포됩니다.
 
-## 확인 상태
+## 검증 상태
 
-2026-08-05 기준:
+2026-08-05 기준으로 다음을 확인했습니다.
 
 - `npm run build` 성공
 - 로컬 preview에서 치명적인 console error 없음
-- 현재 빌드 기준 스크린샷 확보 완료
+- 스크린샷 갱신 완료
 
-## 현재 환경 제한
+## 저장소
 
-- 작업 폴더에 Git 저장소가 아직 초기화되어 있지 않음
-- 따라서 이 환경에서는 commit과 공개 Netlify URL 생성을 완료할 수 없음
+GitHub 저장소:
+
+- [dchumov/koreantowngame](https://github.com/dchumov/koreantowngame)
+
