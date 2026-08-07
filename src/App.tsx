@@ -6,6 +6,7 @@ import MobileControls from './components/MobileControls'
 import OutfitPanel from './components/OutfitPanel'
 import QuizPanel from './components/QuizPanel'
 import RoomCustomizer from './components/RoomCustomizer'
+import SpeedSlider from './components/SpeedSlider'
 import { itemCatalog, interactions, locationCatalog, outfitCatalog, type InteractionData, type RoomSlotId } from './content/interactions'
 import { TownScene } from './game/scenes/TownScene'
 import { useGameStore } from './store/gameStore'
@@ -304,6 +305,8 @@ export default function App() {
           onEquip={equipOutfit}
         />
       )}
+
+      {!activeOverlaysOpen && <SpeedSlider isMobile={isMobileUi} />}
 
       {isMobileUi && (
         <MobileControls
