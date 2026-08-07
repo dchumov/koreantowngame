@@ -1,4 +1,9 @@
 import Phaser from 'phaser'
+import { clampSpeed, DEFAULT_SPEED, MAX_SPEED, useSpeedStore } from '../../store/speedStore'
+
+// Shift keeps its sprint boost, scaled so that at the default speed (150) it still
+// reaches the original sprint value (220), and is always capped at MAX_SPEED.
+const SPRINT_MULTIPLIER = MAX_SPEED / DEFAULT_SPEED
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
   cursors!: Phaser.Types.Input.Keyboard.CursorKeys
@@ -17,7 +22,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   update() {
     const mobileInput = this.scene.registry.get('mobileInput') as { x: number; y: number } | undefined
     const hasMobileInput = Boolean(mobileInput && (Math.abs(mobileInput.x) > 0.08 || Math.abs(mobileInput.y) > 0.08))
-    const speed = this.keys?.SHIFT?.isDown ? 220 : 150
+    const base = clampSpeed(useSpeedStore.getState().moveSpeed)
+    const speed = this.keys?.SHIFT?.isDown ? Math.min(MAX_SPEED, base * SPRINT_MULTIPLIER) : base
     let vx = 0, vy = 0
     if (hasMobileInput && mobileInput) {
       vx = mobileInput.x * speed
