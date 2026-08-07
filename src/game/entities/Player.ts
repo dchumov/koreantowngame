@@ -20,6 +20,13 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     }
   }
   update() {
+    // Any open overlay (dialogue, quiz, shop, panel) freezes the player so it
+    // cannot be moved with the keyboard behind the UI.
+    if (this.scene.registry.get('interactionOpen')) {
+      this.setVelocity(0, 0)
+      return
+    }
+
     const mobileInput = this.scene.registry.get('mobileInput') as { x: number; y: number } | undefined
     const hasMobileInput = Boolean(mobileInput && (Math.abs(mobileInput.x) > 0.08 || Math.abs(mobileInput.y) > 0.08))
     const base = clampSpeed(useSpeedStore.getState().moveSpeed)
