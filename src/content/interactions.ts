@@ -52,7 +52,7 @@ export interface ItemConfig {
   id: string
   labelKo: string
   labelRu: string
-  kind: 'furniture' | 'souvenir'
+  kind: 'furniture' | 'souvenir' | 'bag' | 'accessory' | 'snack'
   slot?: RoomSlotId
   cost: number
   unlockHint: string
@@ -237,6 +237,80 @@ export const itemCatalog: ItemConfig[] = [
     unlockHint: 'Награда от 소라.',
     description: 'Коллекционный значок за прохождение школы.',
   },
+
+  // ── Товары магазинов Хондэ (покупаются за монеты в интерьерах) ──────────
+  {
+    id: 'barley-tea',
+    labelKo: '보리차',
+    labelRu: 'Ячменный чай',
+    kind: 'snack',
+    cost: 6,
+    unlockHint: 'Продаётся в круглосуточном магазине Хондэ.',
+    description: 'Холодный ячменный чай из холодильника у входа.',
+  },
+  {
+    id: 'rice-ball',
+    labelKo: '삼각김밥',
+    labelRu: 'Онигири самгак-кимпаб',
+    kind: 'snack',
+    cost: 8,
+    unlockHint: 'Продаётся в круглосуточном магазине Хондэ.',
+    description: 'Треугольный рисовый ролик — классика корейских магазинов.',
+  },
+  {
+    id: 'umbrella',
+    labelKo: '우산',
+    labelRu: 'Зонт',
+    kind: 'accessory',
+    cost: 15,
+    unlockHint: 'Продаётся в круглосуточном магазине Хондэ.',
+    description: 'Простой прозрачный зонт на случай дождя.',
+  },
+  {
+    id: 'hair-pin',
+    labelKo: '별 머리핀',
+    labelRu: 'Заколка-звезда',
+    kind: 'accessory',
+    cost: 12,
+    unlockHint: 'Продаётся в магазине одежды Хондэ.',
+    description: 'Маленькая заколка в форме звезды.',
+  },
+  {
+    id: 'cap-navy',
+    labelKo: '네이비 모자',
+    labelRu: 'Тёмно-синяя кепка',
+    kind: 'accessory',
+    cost: 18,
+    unlockHint: 'Продаётся в универмаге Хондэ.',
+    description: 'Базовая кепка, которая подходит к любому образу.',
+  },
+  {
+    id: 'round-glasses',
+    labelKo: '동그란 안경',
+    labelRu: 'Круглые очки',
+    kind: 'accessory',
+    cost: 22,
+    unlockHint: 'Продаётся в универмаге Хондэ.',
+    description: 'Тонкая оправа круглой формы.',
+  },
+  {
+    id: 'canvas-bag',
+    labelKo: '캔버스 가방',
+    labelRu: 'Холщовая сумка',
+    kind: 'bag',
+    cost: 28,
+    unlockHint: 'Продаётся в универмаге Хондэ.',
+    description: 'Лёгкая тканевая сумка на каждый день.',
+  },
+  {
+    id: 'mini-backpack',
+    labelKo: '미니 백팩',
+    labelRu: 'Мини-рюкзак',
+    kind: 'bag',
+    cost: 38,
+    unlockHint: 'Продаётся в универмаге Хондэ.',
+    description: 'Компактный рюкзак для прогулок по городу.',
+  },
 ]
 
 export const outfitCatalog: OutfitConfig[] = [
@@ -263,6 +337,32 @@ export const outfitCatalog: OutfitConfig[] = [
     cost: 40,
     unlockHint: 'Открывается после школы.',
     description: 'Аккуратная одежда для учебных заданий.',
+  },
+
+  // ── Одежда из магазина одежды в Хондэ ──────────────────────────────────
+  {
+    id: 'street-style',
+    labelKo: '스트리트 룩',
+    labelRu: 'Уличный стиль',
+    cost: 35,
+    unlockHint: 'Продаётся в магазине одежды Хондэ.',
+    description: 'Свободный уличный образ в духе района Хондэ.',
+  },
+  {
+    id: 'hongdae-jacket',
+    labelKo: '홍대 재킷',
+    labelRu: 'Куртка Хондэ',
+    cost: 45,
+    unlockHint: 'Продаётся в магазине одежды Хондэ.',
+    description: 'Тёплая куртка для вечерних прогулок по району.',
+  },
+  {
+    id: 'stage-look',
+    labelKo: '무대 의상',
+    labelRu: 'Сценический образ',
+    cost: 60,
+    unlockHint: 'Продаётся в магазине одежды Хондэ.',
+    description: 'Яркий комплект для выступления на сцене.',
   },
 ]
 

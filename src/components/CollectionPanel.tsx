@@ -19,6 +19,15 @@ interface Props {
 
 type TabId = 'words' | 'sentences' | 'places' | 'items'
 
+const itemKindLabels: Record<string, string> = {
+  furniture: 'Мебель',
+  souvenir: 'Сувенир',
+  bag: 'Сумка',
+  accessory: 'Аксессуар',
+  snack: 'Еда и напитки',
+  outfit: 'Одежда',
+}
+
 const tabs: Array<{ id: TabId; label: string }> = [
   { id: 'words', label: 'Слова' },
   { id: 'sentences', label: 'Предложения' },
@@ -109,7 +118,7 @@ export default function CollectionPanel({ collection, completedInteractions, onC
         return (
           <div key={entry.id} style={cardSurface}>
             <div style={{ fontSize: 12, opacity: 0.56, marginBottom: 8 }}>
-              {entry.kind === 'furniture' ? 'Мебель' : entry.kind === 'souvenir' ? 'Сувенир' : 'Одежда'}
+              {itemKindLabels[entry.kind] ?? 'Одежда'}
             </div>
             <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 4 }}>{unlocked ? entry.labelRu : '???'}</div>
             <div style={{ fontSize: 14, opacity: 0.84, marginBottom: 8 }}>{unlocked ? entry.labelKo : 'Силуэт предмета'}</div>

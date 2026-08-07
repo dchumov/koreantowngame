@@ -1,6 +1,10 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { RoomSlotId } from '../content/interactions'
+import { resolvePurchasable } from '../content/shops'
+
+/** Outcome of a shop purchase attempt. */
+export type PurchaseResult = 'ok' | 'insufficient' | 'owned' | 'unknown'
 
 type CollectionState = {
   words: string[]
@@ -38,6 +42,7 @@ interface GameState {
   addPlaceToCollection: (id: string) => void
   addItemToCollection: (id: string) => void
   addToReview: (id: string) => void
+  purchase: (id: string) => PurchaseResult
   resetProgress: () => void
 }
 
@@ -183,6 +188,53 @@ export const useGameStore = create<GameState>()(
         },
       })),
       addToReview: (id) => set((state) => ({ reviewList: dedupe([...state.reviewList, id]) })),
+      /**
+       * Atomic purchase: the balance check, the deduction and the grant all
+       * happen inside a single state update, so points can never be spent
+       * without receiving the item (and never go negative). Already-owned
+       * items are rejected, which also absorbs double clicks and held inputs.
+       */
+      purchase: (id) => {
+        const entry = resolvePurchasable(id)
+        if (!entry) return 'unknown'
+
+        let result: PurchaseResult = 'ok'
+        set((state) => {
+          const owned = entry.kind === 'outfit'
+            ? state.outfits.includes(entry.id)
+            : state.unlockedItems.includes(entry.id)
+
+          if (owned) {
+            result = 'owned'
+            return {}
+          }
+          if (state.coins < entry.cost) {
+            result = 'insufficient'
+            return {}
+          }
+
+          result = 'ok'
+          const collection = { ...state.collection, items: dedupe([...state.collection.items, entry.id]) }
+
+          if (entry.kind === 'outfit') {
+            return {
+              coins: state.coins - entry.cost,
+              outfits: dedupe([...state.outfits, entry.id]),
+              unlockedOutfits: dedupe([...state.unlockedOutfits, entry.id]),
+              collection,
+            }
+          }
+
+          return {
+            coins: state.coins - entry.cost,
+            unlockedItems: dedupe([...state.unlockedItems, entry.id]),
+            furniture: entry.kind === 'furniture' ? dedupe([...state.furniture, entry.id]) : state.furniture,
+            collection,
+          }
+        })
+
+        return result
+      },
       resetProgress: () => set({ ...initialState, roomSlots: { ...initialRoomSlots }, collection: { ...initialCollection } }),
     }),
     {

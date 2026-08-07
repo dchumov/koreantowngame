@@ -6,8 +6,11 @@ import MobileControls from './components/MobileControls'
 import OutfitPanel from './components/OutfitPanel'
 import QuizPanel from './components/QuizPanel'
 import RoomCustomizer from './components/RoomCustomizer'
+import ShopPanel from './components/ShopPanel'
 import SpeedSlider from './components/SpeedSlider'
 import { itemCatalog, interactions, locationCatalog, outfitCatalog, type InteractionData, type RoomSlotId } from './content/interactions'
+import { interiorNpcMap } from './content/npcs'
+import { InteriorScene } from './game/scenes/InteriorScene'
 import { TownScene } from './game/scenes/TownScene'
 import { useGameStore } from './store/gameStore'
 import { getOverallProgress } from './utils/progress'
@@ -22,6 +25,8 @@ export default function App() {
   const [current, setCurrent] = useState<InteractionData | null>(null)
   const [phase, setPhase] = useState<FlowPhase>(null)
   const [activePanel, setActivePanel] = useState<OverlayPanel>(null)
+  const [activeShopId, setActiveShopId] = useState<string | null>(null)
+  const [activeNpcId, setActiveNpcId] = useState<string | null>(null)
   const [debugOpen, setDebugOpen] = useState(false)
   const [isMobileUi, setIsMobileUi] = useState(false)
   const [debugState, setDebugState] = useState({
@@ -60,7 +65,13 @@ export default function App() {
   const addPlaceToCollection = useGameStore((state) => state.addPlaceToCollection)
   const addItemToCollection = useGameStore((state) => state.addItemToCollection)
   const addToReview = useGameStore((state) => state.addToReview)
+  const purchase = useGameStore((state) => state.purchase)
   const resetProgress = useGameStore((state) => state.resetProgress)
+
+  const activeNpc = activeNpcId ? interiorNpcMap.get(activeNpcId) ?? null : null
+  // Every overlay blocks gameplay input, so the player never moves behind a panel.
+  const activeOverlaysOpen =
+    Boolean(current && phase) || Boolean(activePanel) || Boolean(activeShopId) || Boolean(activeNpc)
 
   useEffect(() => {
     const game = new Phaser.Game({
@@ -72,7 +83,7 @@ export default function App() {
       pixelArt: true,
       scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
       physics: { default: 'arcade', arcade: { debug: false } },
-      scene: [TownScene],
+      scene: [TownScene, InteriorScene],
     })
     gameRef.current = game
 
@@ -82,15 +93,30 @@ export default function App() {
       setCurrent(interaction)
       setPhase('dialogue')
     }
+    const onOpenNpcDialogue = (data: { npcId: string }) => setActiveNpcId(data.npcId)
+    const onOpenShop = (data: { shopId: string }) => setActiveShopId(data.shopId)
+    // Emitted right before a scene swap so no panel survives the transition.
+    const onCloseOverlays = () => {
+      setActiveNpcId(null)
+      setActiveShopId(null)
+      setCurrent(null)
+      setPhase(null)
+    }
     const onDebugState = (state: typeof debugState) => setDebugState(state)
     const onDebugEvent = (lastEvent: string) => setDebugState((state) => ({ ...state, lastEvent }))
 
     game.events.on('open-interaction', onOpenInteraction)
+    game.events.on('open-npc-dialogue', onOpenNpcDialogue)
+    game.events.on('open-shop', onOpenShop)
+    game.events.on('close-overlays', onCloseOverlays)
     game.events.on('debug-state', onDebugState)
     game.events.on('debug-event', onDebugEvent)
 
     return () => {
       game.events.off('open-interaction', onOpenInteraction)
+      game.events.off('open-npc-dialogue', onOpenNpcDialogue)
+      game.events.off('open-shop', onOpenShop)
+      game.events.off('close-overlays', onCloseOverlays)
       game.events.off('debug-state', onDebugState)
       game.events.off('debug-event', onDebugEvent)
       game.destroy(true)
@@ -99,9 +125,9 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    gameRef.current?.registry.set('interactionOpen', Boolean(current && phase))
+    gameRef.current?.registry.set('interactionOpen', activeOverlaysOpen)
     gameRef.current?.registry.set('debugOpen', debugOpen)
-  }, [current, phase, debugOpen])
+  }, [activeOverlaysOpen, debugOpen])
 
   useEffect(() => {
     gameRef.current?.events.emit('progress-changed')
@@ -127,6 +153,8 @@ export default function App() {
       }
       if (event.key === 'Escape') {
         setActivePanel(null)
+        setActiveShopId(null)
+        setActiveNpcId(null)
       }
     }
     window.addEventListener('keydown', onKey)
@@ -214,7 +242,6 @@ export default function App() {
     setPhase(null)
   }
 
-  const activeOverlaysOpen = Boolean(current && phase) || Boolean(activePanel)
   const totalProgress = getOverallProgress(completedInteractions)
   const completedPlaces = locationCatalog.filter((location) =>
     interactions.filter((interaction) => interaction.locationId === location.id).every((interaction) => completedInteractions.includes(interaction.id))
@@ -303,6 +330,25 @@ export default function App() {
           onClose={() => setActivePanel(null)}
           onBuy={handleBuyOutfit}
           onEquip={equipOutfit}
+        />
+      )}
+
+      {activeNpc && (
+        <DialogueModal
+          lines={activeNpc.dialogue}
+          onComplete={() => setActiveNpcId(null)}
+          onClose={() => setActiveNpcId(null)}
+        />
+      )}
+
+      {activeShopId && (
+        <ShopPanel
+          shopId={activeShopId}
+          coins={coins}
+          unlockedItems={unlockedItems}
+          outfits={outfits}
+          onClose={() => setActiveShopId(null)}
+          onPurchase={purchase}
         />
       )}
 
