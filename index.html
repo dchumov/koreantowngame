@@ -1,6 +1,12 @@
 <!doctype html>
 <html lang="ru">
   <head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Korea Town: 한국어로 살아보기</title></head>
+  <title>Korea Town: 한국어로 살아보기</title>
+  <style>
+    /* Removes the default body margin, which made the 100vw layout overflow
+       horizontally, and stops the page behind a modal from scrolling.
+       Modals keep their own internal scrolling. */
+    html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+  </style></head>
   <body><div id="root"></div><script type="module" src="/src/main.tsx"></script></body>
 </html>

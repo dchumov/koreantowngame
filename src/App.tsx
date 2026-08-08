@@ -1,15 +1,17 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import Phaser from 'phaser'
-import CollectionPanel from './components/CollectionPanel'
+import CollectionPanel, { COLLECTION_TITLE } from './components/CollectionPanel'
 import DialogueModal from './components/DialogueModal'
+import Minimap from './components/Minimap'
 import MobileControls from './components/MobileControls'
 import OutfitPanel from './components/OutfitPanel'
 import QuizPanel from './components/QuizPanel'
 import RoomCustomizer from './components/RoomCustomizer'
 import ShopPanel from './components/ShopPanel'
 import SpeedSlider from './components/SpeedSlider'
-import { itemCatalog, interactions, locationCatalog, outfitCatalog, type InteractionData, type RoomSlotId } from './content/interactions'
+import { itemCatalog, interactions, outfitCatalog, type InteractionData, type RoomSlotId } from './content/interactions'
 import { interiorNpcMap } from './content/npcs'
+import { countDiscoveredPlaces, placeCatalog, placeMap } from './content/places'
 import { InteriorScene } from './game/scenes/InteriorScene'
 import { TownScene } from './game/scenes/TownScene'
 import { useGameStore } from './store/gameStore'
@@ -29,6 +31,8 @@ export default function App() {
   const [activeNpcId, setActiveNpcId] = useState<string | null>(null)
   const [debugOpen, setDebugOpen] = useState(false)
   const [isMobileUi, setIsMobileUi] = useState(false)
+  // Kept in state (not just the ref) so the minimap can subscribe to the game.
+  const [gameInstance, setGameInstance] = useState<Phaser.Game | null>(null)
   const [debugState, setDebugState] = useState({
     x: 0,
     y: 0,
@@ -86,6 +90,7 @@ export default function App() {
       scene: [TownScene, InteriorScene],
     })
     gameRef.current = game
+    setGameInstance(game)
 
     const onOpenInteraction = (data: { interactionId: string }) => {
       const interaction = interactions.find((entry) => entry.id === data.interactionId)
@@ -105,10 +110,22 @@ export default function App() {
     const onDebugState = (state: typeof debugState) => setDebugState(state)
     const onDebugEvent = (lastEvent: string) => setDebugState((state) => ({ ...state, lastEvent }))
 
+    // Visiting a place discovers it, plus the ambient vocabulary tied to that
+    // location. Every adder dedupes, so this stays idempotent no matter how
+    // often the player walks back in.
+    const onDiscoverPlace = (data: { placeId: string }) => {
+      const store = useGameStore.getState()
+      store.addPlaceToCollection(data.placeId)
+      const place = placeMap.get(data.placeId)
+      place?.unlockWords?.forEach((wordId) => store.addWordToCollection(wordId))
+      place?.unlockSentences?.forEach((sentenceId) => store.addSentenceToCollection(sentenceId))
+    }
+
     game.events.on('open-interaction', onOpenInteraction)
     game.events.on('open-npc-dialogue', onOpenNpcDialogue)
     game.events.on('open-shop', onOpenShop)
     game.events.on('close-overlays', onCloseOverlays)
+    game.events.on('discover-place', onDiscoverPlace)
     game.events.on('debug-state', onDebugState)
     game.events.on('debug-event', onDebugEvent)
 
@@ -117,10 +134,12 @@ export default function App() {
       game.events.off('open-npc-dialogue', onOpenNpcDialogue)
       game.events.off('open-shop', onOpenShop)
       game.events.off('close-overlays', onCloseOverlays)
+      game.events.off('discover-place', onDiscoverPlace)
       game.events.off('debug-state', onDebugState)
       game.events.off('debug-event', onDebugEvent)
       game.destroy(true)
       gameRef.current = null
+      setGameInstance(null)
     }
   }, [])
 
@@ -242,10 +261,23 @@ export default function App() {
     setPhase(null)
   }
 
+  /**
+   * Finishing an interior NPC conversation adds its vocabulary and sentences to
+   * the collection. Both adders dedupe, so repeating a conversation never
+   * creates duplicates.
+   */
+  const handleNpcDialogueComplete = () => {
+    if (activeNpc) {
+      activeNpc.unlockWords?.forEach((wordId) => addWordToCollection(wordId))
+      activeNpc.unlockSentences?.forEach((sentenceId) => addSentenceToCollection(sentenceId))
+    }
+    setActiveNpcId(null)
+  }
+
   const totalProgress = getOverallProgress(completedInteractions)
-  const completedPlaces = locationCatalog.filter((location) =>
-    interactions.filter((interaction) => interaction.locationId === location.id).every((interaction) => completedInteractions.includes(interaction.id))
-  ).length
+  // Real discovered-place count, driven by the place catalog rather than a
+  // hard-coded total. Only ids that exist in the catalog are counted.
+  const discoveredPlaces = countDiscoveredPlaces(collection.places)
 
   return (
     <div style={{
@@ -282,7 +314,7 @@ export default function App() {
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center', marginBottom: 8 }}>
             <span style={{ fontWeight: 800 }}>XP {xp}</span>
             <span style={{ fontWeight: 800 }}>Coins {coins}</span>
-            <span style={{ fontWeight: 800 }}>Места {completedPlaces} / {locationCatalog.length}</span>
+            <span style={{ fontWeight: 800 }}>Места {discoveredPlaces} / {placeCatalog.length}</span>
           </div>
           <div style={{ height: 8, borderRadius: 999, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
             <div style={{ width: `${totalProgress}%`, height: '100%', background: 'linear-gradient(90deg, #5ec8ff, #9aee86)' }} />
@@ -290,7 +322,14 @@ export default function App() {
         </div>
 
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', pointerEvents: 'auto' }}>
-          <button onClick={() => setActivePanel('collection')} style={hudButtonStyle}>도감</button>
+          <button
+            onClick={() => setActivePanel('collection')}
+            style={hudButtonStyle}
+            title={COLLECTION_TITLE}
+            aria-label={COLLECTION_TITLE}
+          >
+            {isMobileUi ? 'Коллекция' : COLLECTION_TITLE}
+          </button>
           <button onClick={() => setActivePanel('room')} style={hudButtonStyle}>Комната</button>
           <button onClick={() => setActivePanel('outfit')} style={hudButtonStyle}>Одежда</button>
           <button onClick={resetProgress} style={{ ...hudButtonStyle, background: 'rgba(255, 124, 124, 0.16)' }}>Сбросить</button>
@@ -306,7 +345,7 @@ export default function App() {
       )}
 
       {activePanel === 'collection' && (
-        <CollectionPanel collection={collection} completedInteractions={completedInteractions} onClose={() => setActivePanel(null)} />
+        <CollectionPanel collection={collection} onClose={() => setActivePanel(null)} />
       )}
 
       {activePanel === 'room' && (
@@ -336,7 +375,7 @@ export default function App() {
       {activeNpc && (
         <DialogueModal
           lines={activeNpc.dialogue}
-          onComplete={() => setActiveNpcId(null)}
+          onComplete={handleNpcDialogueComplete}
           onClose={() => setActiveNpcId(null)}
         />
       )}
@@ -352,6 +391,9 @@ export default function App() {
         />
       )}
 
+      {/* Minimap sits below every modal and hides while one is open. */}
+      {!activeOverlaysOpen && <Minimap game={gameInstance} isMobile={isMobileUi} />}
+
       {!activeOverlaysOpen && <SpeedSlider isMobile={isMobileUi} />}
 
       {isMobileUi && (
@@ -366,7 +408,8 @@ export default function App() {
         <div style={{
           position: 'fixed',
           left: 14,
-          bottom: isMobileUi ? 160 : 14,
+          // Sits above the minimap so the two never overlap.
+          bottom: isMobileUi ? 310 : 172,
           zIndex: 1100,
           width: 290,
           background: 'rgba(7, 12, 22, 0.92)',

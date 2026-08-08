@@ -2,6 +2,7 @@ import Phaser from 'phaser'
 import { enterableBuildings } from '../../content/hongdae'
 import { DOOR_GAP, WALL_THICKNESS, interiorCatalog, interiorMap } from '../../content/interiors'
 import { getNpcsForInterior, npcSpritePrefixes } from '../../content/npcs'
+import { placeIdForInterior } from '../../content/places'
 import { NPC } from '../entities/NPC'
 import { Player } from '../entities/Player'
 import { DEPTH, addSolid } from '../systems/MapBuilder'
@@ -168,6 +169,12 @@ export class InteriorScene extends Phaser.Scene {
       this.game.events.off('mobile-interact', this.handleMobileInteract, this)
     })
 
+    // Entering a building discovers its place (idempotent in the store).
+    const placeId = placeIdForInterior(this.interiorId)
+    if (placeId) this.game.events.emit('discover-place', { placeId })
+    // The minimap maps the outdoor district, so it hides while indoors.
+    this.game.events.emit('scene-changed', { scene: 'interior' })
+
     // Cooldown so the entering key press cannot immediately trigger the exit.
     this.interactionSystem.lock(500)
   }
@@ -191,13 +198,15 @@ export class InteriorScene extends Phaser.Scene {
       this.interactionSystem.tryInteract(this.eKey)
     }
 
-    this.game.events.emit('debug-state', {
-      x: Math.round(this.player.x),
-      y: Math.round(this.player.y),
-      vx: Math.round(this.player.body?.velocity.x ?? 0),
-      vy: Math.round(this.player.body?.velocity.y ?? 0),
-      activeZone: this.interactionSystem.getActiveZoneId(),
-      lastEvent: this.lastDebugEvent,
-    })
+    if (this.registry.get('debugOpen')) {
+      this.game.events.emit('debug-state', {
+        x: Math.round(this.player.x),
+        y: Math.round(this.player.y),
+        vx: Math.round(this.player.body?.velocity.x ?? 0),
+        vy: Math.round(this.player.body?.velocity.y ?? 0),
+        activeZone: this.interactionSystem.getActiveZoneId(),
+        lastEvent: this.lastDebugEvent,
+      })
+    }
   }
 }

@@ -48,6 +48,78 @@ export function drawCrosswalk(scene: Phaser.Scene, rect: Rect & { orientation: '
   }
 }
 
+/** Draws a dashed lane marking along a road centre line. */
+export function drawLaneMarking(
+  scene: Phaser.Scene,
+  rect: Rect & { orientation: 'h' | 'v' },
+  color: number
+) {
+  const dash = 46
+  const gap = 38
+  if (rect.orientation === 'h') {
+    for (let x = rect.x; x < rect.x + rect.w; x += dash + gap) {
+      scene.add.rectangle(x + dash / 2, rect.y + rect.h / 2, dash, rect.h, color, 0.55).setDepth(DEPTH.marking)
+    }
+  } else {
+    for (let y = rect.y; y < rect.y + rect.h; y += dash + gap) {
+      scene.add.rectangle(rect.x + rect.w / 2, y + dash / 2, rect.w, dash, color, 0.55).setDepth(DEPTH.marking)
+    }
+  }
+}
+
+/** Thin kerb line along the inner edge of a sidewalk strip. */
+export function drawCurb(scene: Phaser.Scene, rect: Rect, color: number) {
+  const t = 3
+  if (rect.w > rect.h) {
+    scene.add.rectangle(rect.x + rect.w / 2, rect.y + rect.h - t / 2, rect.w, t, color, 0.5).setDepth(DEPTH.marking)
+  } else {
+    scene.add.rectangle(rect.x + rect.w - t / 2, rect.y + rect.h / 2, t, rect.h, color, 0.5).setDepth(DEPTH.marking)
+  }
+}
+
+/**
+ * Draws a small piece of non-solid street furniture. Purely decorative so it
+ * can never block a pedestrian route or an entrance.
+ */
+export function drawStreetFurniture(
+  scene: Phaser.Scene,
+  x: number,
+  y: number,
+  kind: 'lamp' | 'bench' | 'bike' | 'tree' | 'sign' | 'busstop',
+  palette: { furniture: number; tree: number; planter: number; lamp: number }
+) {
+  const depth = DEPTH.marking + 1
+  switch (kind) {
+    case 'lamp':
+      scene.add.rectangle(x, y, 5, 30, palette.furniture, 0.95).setDepth(depth)
+      scene.add.circle(x, y - 20, 7, palette.lamp, 0.85).setDepth(depth)
+      break
+    case 'bench':
+      scene.add.rectangle(x, y, 44, 13, palette.furniture, 0.95).setDepth(depth)
+      scene.add.rectangle(x, y - 8, 44, 4, palette.furniture, 0.7).setDepth(depth)
+      break
+    case 'bike':
+      scene.add.rectangle(x, y, 40, 6, palette.furniture, 0.9).setDepth(depth)
+      for (let i = -1; i <= 1; i += 1) {
+        scene.add.rectangle(x + i * 13, y - 8, 4, 16, palette.furniture, 0.9).setDepth(depth)
+      }
+      break
+    case 'tree':
+      scene.add.rectangle(x, y + 8, 7, 14, 0x5a4636, 0.95).setDepth(depth)
+      scene.add.circle(x, y - 6, 17, palette.tree, 0.95).setDepth(depth)
+      break
+    case 'sign':
+      scene.add.rectangle(x, y, 4, 26, palette.furniture, 0.95).setDepth(depth)
+      scene.add.rectangle(x, y - 18, 22, 15, 0x3f6fb5, 0.95).setDepth(depth)
+      break
+    case 'busstop':
+      scene.add.rectangle(x, y, 70, 10, palette.furniture, 0.95).setDepth(depth)
+      scene.add.rectangle(x - 30, y - 16, 5, 32, palette.furniture, 0.95).setDepth(depth)
+      scene.add.rectangle(x + 30, y - 16, 5, 32, palette.furniture, 0.95).setDepth(depth)
+      break
+  }
+}
+
 export interface BuiltBuilding {
   /** Interaction zone position, in the doorway mouth. */
   door: { x: number; y: number }

@@ -16,12 +16,62 @@ export const OUTDOOR_SPAWN = { x: 1024, y: 1000 }
 
 export type Rect = { x: number; y: number; w: number; h: number }
 
+/**
+ * Modern urban colour palette. Restrained, contemporary tones in the spirit of
+ * a clean digital city map, kept dark enough to match the existing game UI.
+ */
+export const URBAN = {
+  ground: 0x1b2130,      // base city ground
+  block: 0x232b3c,       // paved urban blocks between streets
+  sidewalk: 0x3a4258,    // pale paved sidewalk
+  asphalt: 0x2f3646,     // road surface
+  alley: 0x272e3d,       // narrower back streets
+  curb: 0x49536b,        // kerb line between sidewalk and road
+  laneMark: 0xd8e0f0,    // white lane dashes
+  crosswalk: 0xeef2fa,   // zebra stripes
+  planter: 0x2f6b46,     // urban planter greenery
+  tree: 0x35855c,        // small street tree
+  furniture: 0x566179,   // benches, bike racks, signs
+  lamp: 0xf2e2a8,        // streetlight glow
+} as const
+
 /** Asphalt / pavement strips. Purely visual, never solid. */
 export const roadLayer: Rect[] = [
   { x: 0, y: 600, w: MAP_W, h: 170 },   // 걷고 싶은 거리 — main street
   { x: 0, y: 1500, w: MAP_W, h: 130 },  // secondary street
   { x: 1180, y: 0, w: 140, h: MAP_H },  // vertical street
   { x: 2000, y: 0, w: 140, h: MAP_H },  // vertical street
+]
+
+/**
+ * Paved sidewalks flanking every road. Non-solid: they are the walkable
+ * pedestrian network and are drawn just outside each road strip.
+ */
+export const SIDEWALK = 26
+
+export const sidewalkLayer: Rect[] = roadLayer.flatMap((road) =>
+  road.w > road.h
+    ? [
+        { x: road.x, y: road.y - SIDEWALK, w: road.w, h: SIDEWALK },
+        { x: road.x, y: road.y + road.h, w: road.w, h: SIDEWALK },
+      ]
+    : [
+        { x: road.x - SIDEWALK, y: road.y, w: SIDEWALK, h: road.h },
+        { x: road.x + road.w, y: road.y, w: SIDEWALK, h: road.h },
+      ]
+)
+
+/** Large paved city blocks that replace the old open grass fields. */
+export const blockLayer: Rect[] = [
+  { x: 60, y: 120, w: 1060, h: 420 },
+  { x: 1380, y: 120, w: 560, h: 420 },
+  { x: 2200, y: 120, w: 940, h: 420 },
+  { x: 60, y: 830, w: 1060, h: 610 },
+  { x: 1380, y: 830, w: 560, h: 610 },
+  { x: 2200, y: 830, w: 940, h: 610 },
+  { x: 60, y: 1690, w: 1060, h: 420 },
+  { x: 1380, y: 1690, w: 560, h: 420 },
+  { x: 2200, y: 1690, w: 940, h: 420 },
 ]
 
 /** Narrow alleys that make the block feel like Hongdae back streets. */
@@ -185,16 +235,55 @@ export const decorBuildings: OutdoorBuilding[] = [
   { id: 'd12', x: 2860, y: 1860, w: 240, h: 180, signKo: '거리 갤러리', signRu: 'Уличная галерея', bodyColor: 0x3a2f24, roofColor: 0xbb9a63, entranceSide: 'top', texture: 'building-street-gallery' },
 ]
 
-/** Small solid street props (planters, kiosks, benches). */
+/** Small solid street props (planters, kiosks, benches) — kept for compatibility. */
 export const propLayer: Array<Rect & { color: number }> = [
-  { x: 1000, y: 820, w: 56, h: 56, color: 0x3d6b46 },
-  { x: 1500, y: 820, w: 56, h: 56, color: 0x3d6b46 },
-  { x: 2300, y: 820, w: 56, h: 56, color: 0x3d6b46 },
-  { x: 700, y: 1180, w: 56, h: 56, color: 0x3d6b46 },
-  { x: 2700, y: 1180, w: 56, h: 56, color: 0x3d6b46 },
-  { x: 1050, y: 1700, w: 70, h: 46, color: 0x5a4636 },
-  { x: 2500, y: 1700, w: 70, h: 46, color: 0x5a4636 },
-  { x: 300, y: 780, w: 46, h: 46, color: 0x5a4636 },
+  { x: 1000, y: 820, w: 56, h: 56, color: URBAN.planter },
+  { x: 1500, y: 820, w: 56, h: 56, color: URBAN.planter },
+  { x: 2300, y: 820, w: 56, h: 56, color: URBAN.planter },
+  { x: 700, y: 1180, w: 56, h: 56, color: URBAN.planter },
+  { x: 2700, y: 1180, w: 56, h: 56, color: URBAN.planter },
+  { x: 1050, y: 1700, w: 70, h: 46, color: URBAN.furniture },
+  { x: 2500, y: 1700, w: 70, h: 46, color: URBAN.furniture },
+  { x: 300, y: 780, w: 46, h: 46, color: URBAN.furniture },
+]
+
+/**
+ * Contemporary street furniture placed along the sidewalks. All of it is
+ * non-solid so it can never trap the player in a narrow pedestrian route;
+ * only the larger planters in `propLayer` above remain solid obstacles.
+ */
+export type StreetFurnitureKind = 'lamp' | 'bench' | 'bike' | 'tree' | 'sign' | 'busstop'
+
+export const streetFurniture: Array<{ x: number; y: number; kind: StreetFurnitureKind }> = [
+  // Main avenue — north sidewalk
+  { x: 170, y: 566, kind: 'lamp' }, { x: 560, y: 566, kind: 'tree' },
+  { x: 900, y: 566, kind: 'bench' }, { x: 1520, y: 566, kind: 'lamp' },
+  { x: 1780, y: 566, kind: 'tree' }, { x: 2320, y: 566, kind: 'bike' },
+  { x: 2660, y: 566, kind: 'lamp' }, { x: 2980, y: 566, kind: 'tree' },
+  // Main avenue — south sidewalk
+  { x: 400, y: 800, kind: 'tree' }, { x: 760, y: 800, kind: 'lamp' },
+  { x: 1480, y: 800, kind: 'bench' }, { x: 1860, y: 800, kind: 'tree' },
+  { x: 2420, y: 800, kind: 'lamp' }, { x: 2860, y: 800, kind: 'bench' },
+  // Secondary street
+  { x: 500, y: 1466, kind: 'lamp' }, { x: 1000, y: 1466, kind: 'tree' },
+  { x: 1540, y: 1466, kind: 'bike' }, { x: 2400, y: 1466, kind: 'lamp' },
+  { x: 2900, y: 1466, kind: 'tree' },
+  { x: 620, y: 1660, kind: 'bench' }, { x: 1720, y: 1660, kind: 'tree' },
+  { x: 2600, y: 1660, kind: 'lamp' },
+  // Vertical streets
+  { x: 1146, y: 300, kind: 'sign' }, { x: 1146, y: 1000, kind: 'lamp' },
+  { x: 1346, y: 1900, kind: 'tree' }, { x: 1966, y: 300, kind: 'lamp' },
+  { x: 2166, y: 1000, kind: 'sign' }, { x: 1966, y: 1960, kind: 'tree' },
+  // Transit street furniture near the station entrance
+  { x: 2180, y: 1700, kind: 'busstop' }, { x: 2180, y: 1790, kind: 'bench' },
+]
+
+/** Dashed centre lines drawn along the two horizontal avenues. */
+export const laneMarkings: Array<Rect & { orientation: 'h' | 'v' }> = [
+  { x: 0, y: 683, w: MAP_W, h: 5, orientation: 'h' },
+  { x: 0, y: 1563, w: MAP_W, h: 5, orientation: 'h' },
+  { x: 1247, y: 0, w: 5, h: MAP_H, orientation: 'v' },
+  { x: 2067, y: 0, w: 5, h: MAP_H, orientation: 'v' },
 ]
 
 /** Non-solid ground text labels that name the district areas. */
