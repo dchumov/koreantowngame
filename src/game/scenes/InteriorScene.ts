@@ -53,6 +53,8 @@ export class InteriorScene extends Phaser.Scene {
       ? 'interior-cu'
       : this.interiorId === 'department'
         ? 'interior-department'
+        : this.interiorId === 'music'
+          ? 'interior-music-shop'
         : 'town-hub'
     playMusic(this, music)
 

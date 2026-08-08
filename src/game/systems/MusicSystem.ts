@@ -1,11 +1,12 @@
 import Phaser from 'phaser'
 
-export type MusicTrack = 'town-hub' | 'interior-cu' | 'interior-department'
+export type MusicTrack = 'town-hub' | 'interior-cu' | 'interior-department' | 'interior-music-shop'
 
 const TRACKS: Record<MusicTrack, string> = {
   'town-hub': 'assets/audio/town-hub.mp3',
   'interior-cu': 'assets/audio/interior-cu.mp3',
   'interior-department': 'assets/audio/interior-department.mp3',
+  'interior-music-shop': 'assets/audio/interior-music-shop.mp3',
 }
 
 const VOLUME = 0.34
