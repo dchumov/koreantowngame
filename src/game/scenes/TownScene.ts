@@ -5,20 +5,35 @@ import {
   MAP_W,
   OUTDOOR_SPAWN,
   TILE,
+  URBAN,
   alleyLayer,
+  blockLayer,
   crosswalkLayer,
   decorBuildings,
   districtLabels,
   enterableBuildings,
+  laneMarkings,
   propLayer,
   roadLayer,
+  sidewalkLayer,
+  streetFurniture,
 } from '../../content/hongdae'
 import { npcSpritePrefixes } from '../../content/npcs'
 import { useGameStore } from '../../store/gameStore'
 import { getLocationProgress } from '../../utils/progress'
 import { NPC } from '../entities/NPC'
 import { Player } from '../entities/Player'
-import { DEPTH, addSolid, buildBuilding, buildWorldBorder, drawBand, drawCrosswalk } from '../systems/MapBuilder'
+import {
+  DEPTH,
+  addSolid,
+  buildBuilding,
+  buildWorldBorder,
+  drawBand,
+  drawCrosswalk,
+  drawCurb,
+  drawLaneMarking,
+  drawStreetFurniture,
+} from '../systems/MapBuilder'
 import { InteractionSystem } from '../systems/InteractionSystem'
 import { playMusic, preloadMusic } from '../systems/MusicSystem'
 
@@ -41,6 +56,9 @@ export class TownScene extends Phaser.Scene {
   private locationVisuals = new Map<string, LocationVisual>()
   /** Set when returning from an interior, so the player lands by that door. */
   private spawnAt: { x: number; y: number } | null = null
+  /** Last position published to the minimap, to skip idle-frame updates. */
+  private lastSentX = Number.NaN
+  private lastSentY = Number.NaN
 
   constructor() {
     super('town')
@@ -49,6 +67,10 @@ export class TownScene extends Phaser.Scene {
   init(data: { fromBuildingId?: string }) {
     this.spawnAt = null
     this.locationVisuals = new Map()
+    // Force the first update() to publish a position, so the minimap re-syncs
+    // even when the player returns to exactly the same coordinates.
+    this.lastSentX = Number.NaN
+    this.lastSentY = Number.NaN
     if (data?.fromBuildingId) {
       const building = enterableBuildings.find((entry) => entry.id === data.fromBuildingId)
       if (building) {
@@ -63,7 +85,8 @@ export class TownScene extends Phaser.Scene {
 
   preload() {
     preloadMusic(this)
-    this.load.image('bg-town-tile', 'assets/bg-town-tile.png')
+    // The old grass/dirt tile sheet is no longer used: the outdoor ground is
+    // now drawn from the modern urban layers in `hongdae.ts`.
     this.load.image('building-dorm', 'assets/building-dorm.png')
     this.load.image('building-store', 'assets/building-store.png')
     this.load.image('building-cafe', 'assets/building-cafe.png')
@@ -86,16 +109,19 @@ export class TownScene extends Phaser.Scene {
     this.registry.set('mobileInput', { x: 0, y: 0 })
     this.physics.world.setBounds(0, 0, MAP_W, MAP_H)
 
-    // ── Ground and street layers (visual only) ────────────────────────────
-    this.add.tileSprite(MAP_W / 2, MAP_H / 2, MAP_W, MAP_H, 'bg-town-tile').setAlpha(0.9).setDepth(DEPTH.ground)
-    roadLayer.forEach((road) => drawBand(this, road, 0x2b3244, DEPTH.road))
-    alleyLayer.forEach((alley) => drawBand(this, alley, 0x333b50, DEPTH.road, 0.9))
-    crosswalkLayer.forEach((crosswalk) => drawCrosswalk(this, crosswalk))
-    roadLayer.forEach((road) => {
-      // Centre line marking for the two main avenues.
-      if (road.h > road.w) return
-      this.add.rectangle(road.x + road.w / 2, road.y + road.h / 2, road.w, 4, 0xf5d76e, 0.35).setDepth(DEPTH.marking)
+    // ── Modern urban ground and street layers (visual only) ───────────────
+    // A flat contemporary city base replaces the old grass/dirt tile sheet.
+    this.add.rectangle(MAP_W / 2, MAP_H / 2, MAP_W, MAP_H, URBAN.ground).setDepth(DEPTH.ground)
+    blockLayer.forEach((block) => drawBand(this, block, URBAN.block, DEPTH.ground + 1))
+    sidewalkLayer.forEach((walk) => {
+      drawBand(this, walk, URBAN.sidewalk, DEPTH.road - 1)
+      drawCurb(this, walk, URBAN.curb)
     })
+    roadLayer.forEach((road) => drawBand(this, road, URBAN.asphalt, DEPTH.road))
+    alleyLayer.forEach((alley) => drawBand(this, alley, URBAN.alley, DEPTH.road, 0.95))
+    laneMarkings.forEach((lane) => drawLaneMarking(this, lane, URBAN.laneMark))
+    crosswalkLayer.forEach((crosswalk) => drawCrosswalk(this, crosswalk))
+    streetFurniture.forEach((item) => drawStreetFurniture(this, item.x, item.y, item.kind, URBAN))
     districtLabels.forEach((entry) =>
       this.add.text(entry.x, entry.y, entry.text, {
         fontSize: '15px',
@@ -202,6 +228,11 @@ export class TownScene extends Phaser.Scene {
       padding: { left: 8, right: 8, top: 6, bottom: 6 },
     }).setScrollFactor(0).setDepth(DEPTH.ui)
 
+    // Being outdoors discovers the district itself (idempotent in the store).
+    this.game.events.emit('discover-place', { placeId: 'hongdae-street' })
+    // Tells the minimap which scene is active so it can show/hide itself.
+    this.game.events.emit('scene-changed', { scene: 'town' })
+
     // Cooldown so the key press that exited an interior cannot re-enter it.
     this.interactionSystem.lock(500)
   }
@@ -263,13 +294,25 @@ export class TownScene extends Phaser.Scene {
       }
     }
 
-    this.game.events.emit('debug-state', {
-      x: Math.round(this.player.x),
-      y: Math.round(this.player.y),
-      vx: Math.round(this.player.body?.velocity.x ?? 0),
-      vy: Math.round(this.player.body?.velocity.y ?? 0),
-      activeZone: this.interactionSystem.getActiveZoneId(),
-      lastEvent: this.lastDebugEvent,
-    })
+    // Minimap marker: emitted only when the player actually moved, so the
+    // marker never triggers work on idle frames.
+    const px = Math.round(this.player.x)
+    const py = Math.round(this.player.y)
+    if (px !== this.lastSentX || py !== this.lastSentY) {
+      this.lastSentX = px
+      this.lastSentY = py
+      this.game.events.emit('player-pos', { x: px, y: py })
+    }
+
+    if (this.registry.get('debugOpen')) {
+      this.game.events.emit('debug-state', {
+        x: px,
+        y: py,
+        vx: Math.round(this.player.body?.velocity.x ?? 0),
+        vy: Math.round(this.player.body?.velocity.y ?? 0),
+        activeZone: this.interactionSystem.getActiveZoneId(),
+        lastEvent: this.lastDebugEvent,
+      })
+    }
   }
 }

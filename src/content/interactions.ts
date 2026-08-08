@@ -46,6 +46,10 @@ export interface SentenceEntry {
   korean: string
   russian: string
   locationId: string
+  /** Short Russian topic label shown on the collection card. */
+  topicRu?: string
+  /** Where the player meets this sentence in the game. */
+  sourceRu?: string
 }
 
 export interface ItemConfig {
@@ -139,14 +143,61 @@ export const locationCatalog: LocationConfig[] = [
 ]
 
 export const sentenceCatalog: SentenceEntry[] = [
-  { id: 's-dorm-1', korean: '기숙사에 침대가 있어요.', russian: 'В общежитии есть кровать.', locationId: 'dorm' },
-  { id: 's-dorm-2', korean: '가방은 책상 옆에 있어요.', russian: 'Сумка рядом со столом.', locationId: 'dorm' },
-  { id: 's-store-1', korean: '물하고 우유를 주세요.', russian: 'Дайте, пожалуйста, воду и молоко.', locationId: 'store' },
-  { id: 's-store-2', korean: '삼각김밥은 어디에 있어요?', russian: 'Где находится 삼각김밥?', locationId: 'store' },
-  { id: 's-cafe-1', korean: '커피 한 잔 주세요.', russian: 'Один кофе, пожалуйста.', locationId: 'cafe' },
-  { id: 's-cafe-2', korean: '메뉴판을 보고 싶어요.', russian: 'Я хочу посмотреть меню.', locationId: 'cafe' },
-  { id: 's-school-1', korean: '학생증을 보여 주세요.', russian: 'Покажите, пожалуйста, студенческий билет.', locationId: 'school' },
-  { id: 's-school-2', korean: '칠판 앞에 책이 있어요.', russian: 'Перед доской лежит книга.', locationId: 'school' },
+  // ── Учебные локации (legacy) ───────────────────────────────────────────
+  { id: 's-dorm-1', korean: '기숙사에 침대가 있어요.', russian: 'В общежитии есть кровать.', locationId: 'dorm', topicRu: 'Комната', sourceRu: 'Разговор с 유나 у общежития' },
+  { id: 's-dorm-2', korean: '가방은 책상 옆에 있어요.', russian: 'Сумка рядом со столом.', locationId: 'dorm', topicRu: 'Комната', sourceRu: 'Викторина 유나 у общежития' },
+  { id: 's-store-1', korean: '물하고 우유를 주세요.', russian: 'Дайте, пожалуйста, воду и молоко.', locationId: 'store', topicRu: 'Покупки', sourceRu: 'Разговор с 민수 у магазина' },
+  { id: 's-store-2', korean: '삼각김밥은 어디에 있어요?', russian: 'Где лежат онигири?', locationId: 'store', topicRu: 'Поиск товара', sourceRu: 'Викторина 민수 у магазина' },
+  { id: 's-cafe-1', korean: '커피 한 잔 주세요.', russian: 'Один кофе, пожалуйста.', locationId: 'cafe', topicRu: 'Заказ', sourceRu: 'Разговор с 지훈 у кафе' },
+  { id: 's-cafe-2', korean: '메뉴판을 보고 싶어요.', russian: 'Я хочу посмотреть меню.', locationId: 'cafe', topicRu: 'Кафе', sourceRu: 'Викторина 지훈 у кафе' },
+  { id: 's-school-1', korean: '학생증을 보여 주세요.', russian: 'Покажите, пожалуйста, студенческий билет.', locationId: 'school', topicRu: 'Школа', sourceRu: 'Разговор с 소라 у школы' },
+  { id: 's-school-2', korean: '칠판 앞에 책이 있어요.', russian: 'Перед доской лежит книга.', locationId: 'school', topicRu: 'Школа', sourceRu: 'Викторина 소라 у школы' },
+
+  // ── Круглосуточный магазин ─────────────────────────────────────────────
+  { id: 's-cvs-1', korean: '어서 오세요! 무엇을 찾으세요?', russian: 'Добро пожаловать! Что вы ищете?', locationId: 'int-convenience', topicRu: 'Приветствие', sourceRu: 'Разговор с 나미 в круглосуточном магазине' },
+  { id: 's-cvs-2', korean: '음료수는 저기 냉장고에 있어요.', russian: 'Напитки вон там, в холодильнике.', locationId: 'int-convenience', topicRu: 'Поиск товара', sourceRu: 'Разговор с 나미 в круглосуточном магазине' },
+  { id: 's-cvs-3', korean: '이거 얼마예요?', russian: 'Сколько это стоит?', locationId: 'int-convenience', topicRu: 'Цена', sourceRu: 'Разговор с 나미 в круглосуточном магазине' },
+  { id: 's-cvs-4', korean: '카드로 하시겠어요, 현금으로 하시겠어요?', russian: 'Картой или наличными?', locationId: 'int-convenience', topicRu: 'Оплата', sourceRu: 'Разговор с 나미 в круглосуточном магазине' },
+  { id: 's-cvs-5', korean: '봉투 필요하세요?', russian: 'Пакет нужен?', locationId: 'int-convenience', topicRu: 'Оплата', sourceRu: 'Разговор с 나미 в круглосуточном магазине' },
+  { id: 's-cvs-6', korean: '삼각김밥이 어디에 있어요?', russian: 'Где лежат онигири?', locationId: 'int-convenience', topicRu: 'Поиск товара', sourceRu: 'Разговор с 철수 в круглосуточном магазине' },
+  { id: 's-cvs-7', korean: '저는 보리차를 제일 좋아해요.', russian: 'Больше всего я люблю ячменный чай.', locationId: 'int-convenience', topicRu: 'Предпочтения', sourceRu: 'Разговор с 철수 в круглосуточном магазине' },
+
+  // ── Магазин одежды ─────────────────────────────────────────────────────
+  { id: 's-cloth-1', korean: '어떤 사이즈를 입으세요?', russian: 'Какой размер вы носите?', locationId: 'int-clothing', topicRu: 'Размер', sourceRu: 'Разговор с 수진 в магазине одежды' },
+  { id: 's-cloth-2', korean: '이거 한번 입어 보시겠어요?', russian: 'Хотите это примерить?', locationId: 'int-clothing', topicRu: 'Примерка', sourceRu: 'Разговор с 수진 в магазине одежды' },
+  { id: 's-cloth-3', korean: '탈의실은 저쪽에 있어요.', russian: 'Примерочная вон там.', locationId: 'int-clothing', topicRu: 'Направление', sourceRu: 'Разговор с 수진 в магазине одежды' },
+  { id: 's-cloth-4', korean: '이건 저한테 좀 커요.', russian: 'Это мне немного велико.', locationId: 'int-clothing', topicRu: 'Размер', sourceRu: 'Разговор с 현우 в магазине одежды' },
+  { id: 's-cloth-5', korean: '더 작은 사이즈 있어요?', russian: 'Есть размер поменьше?', locationId: 'int-clothing', topicRu: 'Размер', sourceRu: 'Разговор с 현우 в магазине одежды' },
+  { id: 's-cloth-6', korean: '다른 색깔도 보고 싶어요.', russian: 'Хочу посмотреть и другой цвет.', locationId: 'int-clothing', topicRu: 'Цвет', sourceRu: 'Разговор с 현우 в магазине одежды' },
+  { id: 's-cloth-7', korean: '잘 어울려요!', russian: 'Вам очень идёт!', locationId: 'int-clothing', topicRu: 'Комплимент', sourceRu: 'Разговор с 수진 в магазине одежды' },
+
+  // ── Универмаг ──────────────────────────────────────────────────────────
+  { id: 's-dept-1', korean: '가방 매장은 이 층에 있어요.', russian: 'Отдел сумок на этом этаже.', locationId: 'int-department', topicRu: 'Этажи', sourceRu: 'Разговор с 유나 в универмаге' },
+  { id: 's-dept-2', korean: '지금 이십 퍼센트 할인 중이에요.', russian: 'Сейчас скидка двадцать процентов.', locationId: 'int-department', topicRu: 'Скидка', sourceRu: 'Разговор с 유나 в универмаге' },
+  { id: 's-dept-3', korean: '화장실이 어디예요?', russian: 'Где находится туалет?', locationId: 'int-department', topicRu: 'Направление', sourceRu: 'Разговор с 유나 в универмаге' },
+  { id: 's-dept-4', korean: '친구 생일 선물을 찾고 있어요.', russian: 'Ищу подарок на день рождения друга.', locationId: 'int-department', topicRu: 'Подарки', sourceRu: 'Разговор с 민수 в универмаге' },
+  { id: 's-dept-5', korean: '저 검은색 가방을 추천해요.', russian: 'Рекомендую вон ту чёрную сумку.', locationId: 'int-department', topicRu: 'Рекомендация', sourceRu: 'Разговор с 민수 в универмаге' },
+  { id: 's-dept-6', korean: '오늘은 쉬는 날이라서 쇼핑하러 왔어요.', russian: 'Сегодня выходной, поэтому пришла за покупками.', locationId: 'int-department', topicRu: 'Разговор', sourceRu: 'Разговор с 세연 в универмаге' },
+
+  // ── Метро ──────────────────────────────────────────────────────────────
+  { id: 's-subway-1', korean: '여기가 홍대입구역이에요.', russian: 'Это станция Хондэ-Ипку.', locationId: 'int-subway', topicRu: 'Станция', sourceRu: 'Разговор с 지훈 в метро' },
+  { id: 's-subway-2', korean: '이호선을 타세요.', russian: 'Садитесь на вторую линию.', locationId: 'int-subway', topicRu: 'Линии метро', sourceRu: 'Разговор с 지훈 в метро' },
+  { id: 's-subway-3', korean: '두 정거장만 가면 돼요.', russian: 'Нужно проехать всего две остановки.', locationId: 'int-subway', topicRu: 'Остановки', sourceRu: 'Разговор с 지훈 в метро' },
+  { id: 's-subway-4', korean: '어디에서 갈아타요?', russian: 'Где делать пересадку?', locationId: 'int-subway', topicRu: 'Пересадка', sourceRu: 'Разговор с 지훈 в метро' },
+  { id: 's-subway-5', korean: '교통카드가 있으면 더 편해요.', russian: 'С транспортной картой намного удобнее.', locationId: 'int-subway', topicRu: 'Транспортная карта', sourceRu: 'Разговор с 도하 в метро' },
+
+  // ── Улица, вход и выход, дружеский разговор ────────────────────────────
+  { id: 's-street-1', korean: '홍대는 사람이 많고 재미있어요.', russian: 'В Хондэ много людей и весело.', locationId: 'hongdae-street', topicRu: 'Район', sourceRu: 'Разговор с 리안 в магазине одежды' },
+  { id: 's-street-2', korean: '잠깐 들어가도 될까요?', russian: 'Можно я ненадолго зайду?', locationId: 'hongdae-street', topicRu: 'Вход в здание', sourceRu: 'Вход в любое здание Хондэ' },
+  { id: 's-street-3', korean: '이제 나갈게요.', russian: 'Теперь я выйду.', locationId: 'hongdae-street', topicRu: 'Выход из здания', sourceRu: 'Выход из любого здания Хондэ' },
+  { id: 's-street-4', korean: '한국어 공부 계속 열심히 하세요!', russian: 'Продолжайте усердно учить корейский!', locationId: 'hongdae-street', topicRu: 'Поддержка', sourceRu: 'Разговор с 리안 в магазине одежды' },
+  { id: 's-street-5', korean: '매일 조금씩 하세요.', russian: 'Занимайтесь каждый день понемногу.', locationId: 'hongdae-street', topicRu: 'Поддержка', sourceRu: 'Разговор с 세연 в универмаге' },
+
+  // ── Ресторан и музыка ──────────────────────────────────────────────────
+  { id: 's-food-1', korean: '라멘 하나 주세요.', russian: 'Один рамэн, пожалуйста.', locationId: 'int-restaurant', topicRu: 'Заказ еды', sourceRu: 'Рамэн в переулке' },
+  { id: 's-food-2', korean: '이거 추천해 주세요.', russian: 'Порекомендуйте что-нибудь, пожалуйста.', locationId: 'int-restaurant', topicRu: 'Рекомендация', sourceRu: 'Рамэн в переулке' },
+  { id: 's-music-1', korean: '오늘 아침에 춤 연습을 했어요.', russian: 'Сегодня утром я репетировал танец.', locationId: 'int-music', topicRu: 'Репетиция', sourceRu: 'Разговор с 리안 в магазине одежды' },
+  { id: 's-music-2', korean: '노래 연습은 매일 해요.', russian: 'Вокал я репетирую каждый день.', locationId: 'int-music', topicRu: 'Репетиция', sourceRu: 'Разговор с 세연 в универмаге' },
 ]
 
 export const itemCatalog: ItemConfig[] = [

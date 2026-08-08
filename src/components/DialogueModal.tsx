@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 
 export interface DialogueLine {
   speaker: string
@@ -14,22 +14,37 @@ interface Props {
 
 export default function DialogueModal({ lines, onComplete, onClose }: Props) {
   const [idx, setIdx] = useState(0)
-  const line = lines[idx]
-  const isLast = idx >= lines.length - 1
+  /** Guards against `onComplete` firing twice from repeated inputs. */
+  const completedRef = useRef(false)
+
+  // Index is clamped so a burst of clicks or a held key can never read past
+  // the last line (which previously crashed the whole app).
+  const safeIdx = Math.min(idx, Math.max(0, lines.length - 1))
+  const line = lines[safeIdx]
+  const isLast = safeIdx >= lines.length - 1
 
   const next = useCallback(() => {
-    if (isLast) { onComplete(); return }
-    setIdx(i => i + 1)
-  }, [isLast, onComplete])
+    if (completedRef.current) return
+    if (isLast) {
+      completedRef.current = true
+      onComplete()
+      return
+    }
+    setIdx((i) => Math.min(i + 1, lines.length - 1))
+  }, [isLast, lines.length, onComplete])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      // `e.repeat` stops a held Enter/Space from racing through the dialogue.
+      if (e.repeat) return
       if (e.key === 'Enter' || e.key === ' ') next()
       if (e.key === 'Escape') onClose()
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
   }, [next, onClose])
+
+  if (!line) return null
 
   return (
     <div style={{
@@ -40,7 +55,7 @@ export default function DialogueModal({ lines, onComplete, onClose }: Props) {
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
         <strong style={{ color: '#4fc3f7', fontSize: 14 }}>{line.speaker}</strong>
-        <span style={{ fontSize: 12, opacity: 0.6 }}>{idx + 1} / {lines.length}</span>
+        <span style={{ fontSize: 12, opacity: 0.6 }}>{safeIdx + 1} / {lines.length}</span>
       </div>
       <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 6, lineHeight: 1.4 }}>{line.korean}</div>
       <div style={{ fontSize: 14, opacity: 0.85, marginBottom: 16, fontStyle: 'italic' }}>{line.russian}</div>

@@ -28,6 +28,10 @@ export interface InteriorNpc {
   y: number
   /** Main teaching topic, surfaced in the report and the prompt label. */
   topicRu: string
+  /** Vocabulary ids added to the collection when this conversation finishes. */
+  unlockWords?: string[]
+  /** Sentence ids added to the collection when this conversation finishes. */
+  unlockSentences?: string[]
   dialogue: DialogueLine[]
 }
 
@@ -49,6 +53,8 @@ export const interiorNpcs: InteriorNpc[] = [
     x: 606,
     y: 308,
     topicRu: 'Приветствие и оплата картой или наличными',
+    unlockWords: ['v-hello', 'v-welcome', 'v-thanks', 'v-drink', 'v-fridge', 'v-plastic-bag', 'v-card', 'v-cash', 'v-price', 'v-won'],
+    unlockSentences: ['s-cvs-1', 's-cvs-2', 's-cvs-3', 's-cvs-4', 's-cvs-5'],
     dialogue: [
       { speaker: '나미', korean: '어서 오세요! 무엇을 찾으세요?', russian: 'Добро пожаловать! Что вы ищете?' },
       { speaker: HINT, korean: '무엇을 찾으세요?', russian: '찾다 — «искать». Вежливый вопрос покупателю.' },
@@ -74,6 +80,8 @@ export const interiorNpcs: InteriorNpc[] = [
     x: 244,
     y: 318,
     topicRu: 'Как спросить, где лежит товар',
+    unlockWords: ['v-where', 'v-barley-tea', 'v-delicious', 'v-like', 'v-triangle-rice-ball'],
+    unlockSentences: ['s-cvs-6', 's-cvs-7'],
     dialogue: [
       { speaker: '철수', korean: '안녕하세요! 여기 자주 와요.', russian: 'Здравствуйте! Я сюда часто хожу.' },
       { speaker: '철수', korean: '삼각김밥이 어디에 있어요?', russian: 'Где лежат онигири?' },
@@ -100,6 +108,8 @@ export const interiorNpcs: InteriorNpc[] = [
     x: 316,
     y: 168,
     topicRu: 'Размеры и примерка одежды',
+    unlockWords: ['v-clothes', 'v-size', 'v-try-on', 'v-fitting-room', 'v-suits-you', 'v-over-there'],
+    unlockSentences: ['s-cloth-1', 's-cloth-2', 's-cloth-3', 's-cloth-7'],
     dialogue: [
       { speaker: '수진', korean: '어서 오세요. 천천히 구경하세요.', russian: 'Добро пожаловать. Смотрите не спеша.' },
       { speaker: '수진', korean: '어떤 사이즈를 입으세요?', russian: 'Какой размер вы носите?' },
@@ -124,6 +134,8 @@ export const interiorNpcs: InteriorNpc[] = [
     x: 168,
     y: 328,
     topicRu: 'Размер не подходит: большой или маленький',
+    unlockWords: ['v-big', 'v-small', 'v-color'],
+    unlockSentences: ['s-cloth-4', 's-cloth-5', 's-cloth-6'],
     dialogue: [
       { speaker: '현우', korean: '이 옷 어때요? 저한테 어울려요?', russian: 'Как вам эта одежда? Мне идёт?' },
       { speaker: '현우', korean: '이건 저한테 좀 커요.', russian: 'Это мне немного велико.' },
@@ -148,6 +160,8 @@ export const interiorNpcs: InteriorNpc[] = [
     x: 452,
     y: 300,
     topicRu: 'Сценический костюм и репетиции',
+    unlockWords: ['v-stage', 'v-concert', 'v-dance', 'v-practice', 'v-many-people', 'v-hongdae'],
+    unlockSentences: ['s-street-1', 's-street-4', 's-music-1'],
     dialogue: [
       { speaker: '리안', korean: '안녕하세요! 저는 리안이에요.', russian: 'Здравствуйте! Я Риан.' },
       { speaker: '리안', korean: '내일 공연이 있어서 무대 의상을 찾고 있어요.', russian: 'Завтра выступление, поэтому ищу сценический костюм.' },
@@ -174,6 +188,8 @@ export const interiorNpcs: InteriorNpc[] = [
     x: 328,
     y: 168,
     topicRu: 'Этажи, отделы и скидки',
+    unlockWords: ['v-department-store', 'v-floor', 'v-discount', 'v-restroom'],
+    unlockSentences: ['s-dept-1', 's-dept-2', 's-dept-3'],
     dialogue: [
       { speaker: '유나', korean: '안녕하세요, 백화점에 오신 걸 환영합니다.', russian: 'Здравствуйте, добро пожаловать в универмаг.' },
       { speaker: '유나', korean: '가방 매장은 이 층에 있어요.', russian: 'Отдел сумок на этом этаже.' },
@@ -198,6 +214,8 @@ export const interiorNpcs: InteriorNpc[] = [
     x: 168,
     y: 320,
     topicRu: 'Выбор сумки и подарка',
+    unlockWords: ['v-gift', 'v-expensive', 'v-cheap', 'v-black', 'v-look'],
+    unlockSentences: ['s-dept-4', 's-dept-5'],
     dialogue: [
       { speaker: '민수', korean: '안녕하세요. 가방을 보고 있어요.', russian: 'Здравствуйте. Я смотрю сумки.' },
       { speaker: '민수', korean: '친구 생일 선물을 찾고 있어요.', russian: 'Ищу подарок на день рождения друга.' },
@@ -222,6 +240,8 @@ export const interiorNpcs: InteriorNpc[] = [
     x: 468,
     y: 312,
     topicRu: 'Хобби, любимая еда и покупки',
+    unlockWords: ['v-shopping', 'v-tteokbokki', 'v-song'],
+    unlockSentences: ['s-dept-6', 's-street-5', 's-music-2'],
     dialogue: [
       { speaker: '세연', korean: '안녕하세요. 저는 세연이라고 해요.', russian: 'Здравствуйте. Меня зовут Сеён.' },
       { speaker: HINT, korean: '-(이)라고 해요', russian: 'Вежливый способ представиться: «меня называют…».' },
@@ -248,6 +268,8 @@ export const interiorNpcs: InteriorNpc[] = [
     x: 300,
     y: 180,
     topicRu: 'Линии метро, пересадка и количество остановок',
+    unlockWords: ['v-station', 'v-line', 'v-stop', 'v-transfer', 'v-ride', 'v-goodbye'],
+    unlockSentences: ['s-subway-1', 's-subway-2', 's-subway-3', 's-subway-4'],
     dialogue: [
       { speaker: '지훈', korean: '안녕하세요. 어디에 가세요?', russian: 'Здравствуйте. Куда вы едете?' },
       { speaker: '지훈', korean: '여기가 홍대입구역이에요.', russian: 'Это станция Хондэ-Ипку.' },
@@ -273,6 +295,8 @@ export const interiorNpcs: InteriorNpc[] = [
     x: 470,
     y: 300,
     topicRu: 'Транспортная карта и дорога на репетицию',
+    unlockWords: ['v-subway', 'v-transit-card'],
+    unlockSentences: ['s-subway-5'],
     dialogue: [
       { speaker: '도하', korean: '안녕하세요! 저는 도하예요.', russian: 'Здравствуйте! Я Тоха.' },
       { speaker: '도하', korean: '저도 지하철을 자주 타요.', russian: 'Я тоже часто езжу на метро.' },

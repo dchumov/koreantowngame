@@ -78,17 +78,25 @@ const initialState = {
 
 const dedupe = (list: string[]) => [...new Set(list)]
 
+/**
+ * Defensive reader for persisted arrays. Older or hand-edited saves can hold
+ * `null`, a string, or an object where a string[] is expected; those must never
+ * crash the game on load.
+ */
+const asStringArray = (value: unknown): string[] =>
+  Array.isArray(value) ? value.filter((entry): entry is string => typeof entry === 'string') : []
+
 const migrateState = (persistedState: unknown) => {
   if (!persistedState || typeof persistedState !== 'object') {
     return initialState
   }
 
   const legacy = persistedState as Record<string, unknown>
-  const legacyCollection = Array.isArray(legacy.collection) ? legacy.collection.filter((value): value is string => typeof value === 'string') : []
-  const furniture = Array.isArray(legacy.furniture) ? legacy.furniture.filter((value): value is string => typeof value === 'string') : []
-  const outfits = Array.isArray(legacy.outfits) ? legacy.outfits.filter((value): value is string => typeof value === 'string') : ['base']
-  const unlockedItems = Array.isArray(legacy.unlockedItems) ? legacy.unlockedItems.filter((value): value is string => typeof value === 'string') : furniture
-  const unlockedOutfits = Array.isArray(legacy.unlockedOutfits) ? legacy.unlockedOutfits.filter((value): value is string => typeof value === 'string') : outfits
+  const legacyCollection = asStringArray(legacy.collection)
+  const furniture = asStringArray(legacy.furniture)
+  const outfits = Array.isArray(legacy.outfits) ? asStringArray(legacy.outfits) : ['base']
+  const unlockedItems = Array.isArray(legacy.unlockedItems) ? asStringArray(legacy.unlockedItems) : furniture
+  const unlockedOutfits = Array.isArray(legacy.unlockedOutfits) ? asStringArray(legacy.unlockedOutfits) : outfits
   const persistedCollection = legacy.collection && typeof legacy.collection === 'object' && !Array.isArray(legacy.collection)
     ? legacy.collection as Partial<CollectionState>
     : null
@@ -103,20 +111,20 @@ const migrateState = (persistedState: unknown) => {
       ...initialRoomSlots,
       ...(legacy.roomSlots && typeof legacy.roomSlots === 'object' ? legacy.roomSlots as Partial<RoomSlotsState> : {}),
     },
-    completedInteractions: Array.isArray(legacy.completedInteractions)
-      ? dedupe(legacy.completedInteractions.filter((value): value is string => typeof value === 'string'))
-      : [],
+    completedInteractions: dedupe(asStringArray(legacy.completedInteractions)),
     unlockedItems: dedupe(unlockedItems),
     unlockedOutfits: dedupe(['base', ...unlockedOutfits]),
     collection: {
-      words: persistedCollection?.words ? dedupe(persistedCollection.words.filter(Boolean)) : [],
-      sentences: persistedCollection?.sentences ? dedupe(persistedCollection.sentences.filter(Boolean)) : legacyCollection,
-      places: persistedCollection?.places ? dedupe(persistedCollection.places.filter(Boolean)) : [],
-      items: persistedCollection?.items ? dedupe(persistedCollection.items.filter(Boolean)) : dedupe(furniture),
+      words: dedupe(asStringArray(persistedCollection?.words)),
+      sentences: Array.isArray(persistedCollection?.sentences)
+        ? dedupe(asStringArray(persistedCollection?.sentences))
+        : legacyCollection,
+      places: dedupe(asStringArray(persistedCollection?.places)),
+      items: Array.isArray(persistedCollection?.items)
+        ? dedupe(asStringArray(persistedCollection?.items))
+        : dedupe(furniture),
     },
-    reviewList: Array.isArray(legacy.reviewList)
-      ? dedupe(legacy.reviewList.filter((value): value is string => typeof value === 'string'))
-      : [],
+    reviewList: dedupe(asStringArray(legacy.reviewList)),
   }
 }
 
