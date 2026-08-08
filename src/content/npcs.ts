@@ -46,8 +46,8 @@ export const interiorNpcs: InteriorNpc[] = [
     interiorId: 'convenience',
     spritePrefix: 'yuna',
     tint: 0xffd9a8,
-    x: 300,
-    y: 176,
+    x: 606,
+    y: 308,
     topicRu: 'Приветствие и оплата картой или наличными',
     dialogue: [
       { speaker: '나미', korean: '어서 오세요! 무엇을 찾으세요?', russian: 'Добро пожаловать! Что вы ищете?' },
@@ -71,8 +71,8 @@ export const interiorNpcs: InteriorNpc[] = [
     interiorId: 'convenience',
     spritePrefix: 'minsu',
     tint: 0xa8e6ff,
-    x: 168,
-    y: 300,
+    x: 244,
+    y: 318,
     topicRu: 'Как спросить, где лежит товар',
     dialogue: [
       { speaker: '철수', korean: '안녕하세요! 여기 자주 와요.', russian: 'Здравствуйте! Я сюда часто хожу.' },
@@ -284,6 +284,9 @@ export const interiorNpcs: InteriorNpc[] = [
     ],
   },
 ]
+
+/** Sprite prefixes that must be preloaded by Phaser scenes. */
+export const npcSpritePrefixes = Array.from(new Set(interiorNpcs.map((npc) => npc.spritePrefix)))
 
 export const interiorNpcMap = new Map(interiorNpcs.map((npc) => [npc.id, npc]))
 

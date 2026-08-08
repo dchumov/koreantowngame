@@ -74,10 +74,16 @@ export function buildBuilding(
   const doorRight = x + DOOR_WIDTH / 2
   const enterable = Boolean(building.interiorId)
 
+  if (building.texture) {
+    const scale = building.textureScale ?? 1.15
+    scene.add.image(x, y, building.texture).setDisplaySize(w * scale, h * scale).setDepth(DEPTH.building + 1)
+  }
+
   if (!enterable) {
     // Decorative block: fully solid, no alcove.
-    addSolid(scene, group, x, y, w, h, building.bodyColor)
-    addSolid(scene, group, x, top + 16, w, 32, building.roofColor)
+    const alpha = building.texture ? 0 : 1
+    addSolid(scene, group, x, y, w, h, building.bodyColor, alpha)
+    addSolid(scene, group, x, top + 16, w, 32, building.roofColor, alpha)
     drawSign(scene, building, building.entranceSide === 'bottom' ? bottom + 22 : top - 22)
     return {
       door: { x, y: bottom },
@@ -87,20 +93,22 @@ export function buildBuilding(
 
   if (building.entranceSide === 'bottom') {
     const mainH = h - ALCOVE_DEPTH
-    addSolid(scene, group, x, top + mainH / 2, w, mainH, building.bodyColor)
-    addSolid(scene, group, (left + doorLeft) / 2, bottom - ALCOVE_DEPTH / 2, doorLeft - left, ALCOVE_DEPTH, building.bodyColor)
-    addSolid(scene, group, (doorRight + right) / 2, bottom - ALCOVE_DEPTH / 2, right - doorRight, ALCOVE_DEPTH, building.bodyColor)
-    addSolid(scene, group, x, top + 16, w, 32, building.roofColor)
+    const alpha = building.texture ? 0 : 1
+    addSolid(scene, group, x, top + mainH / 2, w, mainH, building.bodyColor, alpha)
+    addSolid(scene, group, (left + doorLeft) / 2, bottom - ALCOVE_DEPTH / 2, doorLeft - left, ALCOVE_DEPTH, building.bodyColor, alpha)
+    addSolid(scene, group, (doorRight + right) / 2, bottom - ALCOVE_DEPTH / 2, right - doorRight, ALCOVE_DEPTH, building.bodyColor, alpha)
+    addSolid(scene, group, x, top + 16, w, 32, building.roofColor, alpha)
     drawDoorMat(scene, x, bottom - ALCOVE_DEPTH / 2)
     drawSign(scene, building, top - 20)
     return { door: { x, y: bottom + 8 }, outside: { x, y: bottom + 100 } }
   }
 
   const mainH = h - ALCOVE_DEPTH
-  addSolid(scene, group, x, bottom - mainH / 2, w, mainH, building.bodyColor)
-  addSolid(scene, group, (left + doorLeft) / 2, top + ALCOVE_DEPTH / 2, doorLeft - left, ALCOVE_DEPTH, building.bodyColor)
-  addSolid(scene, group, (doorRight + right) / 2, top + ALCOVE_DEPTH / 2, right - doorRight, ALCOVE_DEPTH, building.bodyColor)
-  addSolid(scene, group, x, bottom - 16, w, 32, building.roofColor)
+  const alpha = building.texture ? 0 : 1
+  addSolid(scene, group, x, bottom - mainH / 2, w, mainH, building.bodyColor, alpha)
+  addSolid(scene, group, (left + doorLeft) / 2, top + ALCOVE_DEPTH / 2, doorLeft - left, ALCOVE_DEPTH, building.bodyColor, alpha)
+  addSolid(scene, group, (doorRight + right) / 2, top + ALCOVE_DEPTH / 2, right - doorRight, ALCOVE_DEPTH, building.bodyColor, alpha)
+  addSolid(scene, group, x, bottom - 16, w, 32, building.roofColor, alpha)
   drawDoorMat(scene, x, top + ALCOVE_DEPTH / 2)
   drawSign(scene, building, bottom + 20)
   return { door: { x, y: top - 8 }, outside: { x, y: top - 100 } }

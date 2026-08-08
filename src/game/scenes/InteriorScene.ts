@@ -1,11 +1,12 @@
 import Phaser from 'phaser'
 import { enterableBuildings } from '../../content/hongdae'
-import { DOOR_GAP, WALL_THICKNESS, interiorMap } from '../../content/interiors'
-import { getNpcsForInterior } from '../../content/npcs'
+import { DOOR_GAP, WALL_THICKNESS, interiorCatalog, interiorMap } from '../../content/interiors'
+import { getNpcsForInterior, npcSpritePrefixes } from '../../content/npcs'
 import { NPC } from '../entities/NPC'
 import { Player } from '../entities/Player'
 import { DEPTH, addSolid } from '../systems/MapBuilder'
 import { InteractionSystem } from '../systems/InteractionSystem'
+import { playMusic, preloadMusic } from '../systems/MusicSystem'
 
 /**
  * One generic scene renders every interior from `interiorCatalog`.
@@ -28,13 +29,16 @@ export class InteriorScene extends Phaser.Scene {
   }
 
   preload() {
+    preloadMusic(this)
+    for (const entry of interiorCatalog) {
+      if (entry.backgroundTexture) this.load.image(entry.backgroundTexture, `assets/${entry.backgroundTexture}.png`)
+    }
     // Textures are global once loaded; this only matters on a direct start.
     for (const direction of ['down', 'up', 'left', 'right']) {
       this.load.image(`player-${direction}`, `assets/generated/player-${direction}.png`)
-      this.load.image(`yuna-${direction}`, `assets/generated/yuna-${direction}.png`)
-      this.load.image(`minsu-${direction}`, `assets/generated/minsu-${direction}.png`)
-      this.load.image(`jihoon-${direction}`, `assets/generated/jihoon-${direction}.png`)
-      this.load.image(`sora-${direction}`, `assets/generated/sora-${direction}.png`)
+      for (const prefix of npcSpritePrefixes) {
+        this.load.image(`${prefix}-${direction}`, `assets/generated/${prefix}-${direction}.png`)
+      }
     }
   }
 
@@ -45,27 +49,43 @@ export class InteriorScene extends Phaser.Scene {
       return
     }
 
+    const music = this.interiorId === 'convenience'
+      ? 'interior-cu'
+      : this.interiorId === 'department'
+        ? 'interior-department'
+        : this.interiorId === 'music'
+          ? 'interior-music-shop'
+        : 'town-hub'
+    playMusic(this, music)
+
     const { w, h } = interior
     this.physics.world.setBounds(0, 0, w, h)
     this.add.rectangle(w / 2, h / 2, w, h, interior.floorColor).setDepth(DEPTH.ground)
+    if (interior.backgroundTexture) {
+      this.add.image(w / 2, h / 2, interior.backgroundTexture).setDisplaySize(w, h).setDepth(DEPTH.ground + 1)
+    }
 
     const walls = this.physics.add.staticGroup()
     const t = WALL_THICKNESS
 
     // Perimeter walls, with a doorway gap at the bottom centre.
-    addSolid(this, walls, w / 2, t / 2, w, t, interior.wallColor)
-    addSolid(this, walls, t / 2, h / 2, t, h, interior.wallColor)
-    addSolid(this, walls, w - t / 2, h / 2, t, h, interior.wallColor)
-    addSolid(this, walls, DOOR_GAP.from / 2, h - t / 2, DOOR_GAP.from, t, interior.wallColor)
-    addSolid(this, walls, (DOOR_GAP.to + w) / 2, h - t / 2, w - DOOR_GAP.to, t, interior.wallColor)
+    const collisionAlpha = interior.backgroundTexture ? 0 : 1
+    addSolid(this, walls, w / 2, t / 2, w, t, interior.wallColor, collisionAlpha)
+    addSolid(this, walls, t / 2, h / 2, t, h, interior.wallColor, collisionAlpha)
+    addSolid(this, walls, w - t / 2, h / 2, t, h, interior.wallColor, collisionAlpha)
+    addSolid(this, walls, DOOR_GAP.from / 2, h - t / 2, DOOR_GAP.from, t, interior.wallColor, collisionAlpha)
+    addSolid(this, walls, (DOOR_GAP.to + w) / 2, h - t / 2, w - DOOR_GAP.to, t, interior.wallColor, collisionAlpha)
 
     // Fixtures and furniture.
     for (const solid of interior.solids) {
-      addSolid(this, walls, solid.x + solid.w / 2, solid.y + solid.h / 2, solid.w, solid.h, solid.color)
+      addSolid(this, walls, solid.x + solid.w / 2, solid.y + solid.h / 2, solid.w, solid.h, solid.color, collisionAlpha)
       if (solid.label) {
-        this.add.text(solid.x + solid.w / 2, solid.y + solid.h / 2, solid.label, {
+        const labelPosition = solid.labelPosition ?? { x: solid.x + solid.w / 2, y: solid.y + solid.h / 2 }
+        this.add.text(labelPosition.x, labelPosition.y, solid.label, {
           fontSize: '12px',
-          color: '#f2f7ff',
+          color: '#ffffff',
+          backgroundColor: '#172033cc',
+          padding: { left: 4, right: 4, top: 2, bottom: 2 },
         }).setOrigin(0.5).setDepth(DEPTH.sign)
       }
     }
@@ -81,11 +101,10 @@ export class InteriorScene extends Phaser.Scene {
 
     this.interactionSystem = new InteractionSystem(this)
 
-    // NPCs — reuse the existing NPC entity, tinted so all ten stay distinct.
+    // NPCs use their own full-color directional sprite sets.
     const npcs: NPC[] = []
     for (const data of getNpcsForInterior(this.interiorId)) {
       const npc = new NPC(this, data.x, data.y, `${data.spritePrefix}-down`, data.id)
-      npc.setTint(data.tint)
       npcs.push(npc)
 
       this.add.text(data.x, data.y - 44, data.category === 'idol' ? `★ ${data.koreanName}` : data.koreanName, {

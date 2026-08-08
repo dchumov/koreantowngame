@@ -13,12 +13,14 @@ import {
   propLayer,
   roadLayer,
 } from '../../content/hongdae'
+import { npcSpritePrefixes } from '../../content/npcs'
 import { useGameStore } from '../../store/gameStore'
 import { getLocationProgress } from '../../utils/progress'
 import { NPC } from '../entities/NPC'
 import { Player } from '../entities/Player'
 import { DEPTH, addSolid, buildBuilding, buildWorldBorder, drawBand, drawCrosswalk } from '../systems/MapBuilder'
 import { InteractionSystem } from '../systems/InteractionSystem'
+import { playMusic, preloadMusic } from '../systems/MusicSystem'
 
 type LocationVisual = {
   building: Phaser.GameObjects.Image
@@ -60,23 +62,27 @@ export class TownScene extends Phaser.Scene {
   }
 
   preload() {
+    preloadMusic(this)
     this.load.image('bg-town-tile', 'assets/bg-town-tile.png')
     this.load.image('building-dorm', 'assets/building-dorm.png')
     this.load.image('building-store', 'assets/building-store.png')
     this.load.image('building-cafe', 'assets/building-cafe.png')
     this.load.image('building-school', 'assets/building-school.png')
+    for (const building of [...enterableBuildings, ...decorBuildings]) {
+      if (building.texture) this.load.image(building.texture, `assets/${building.texture}.png`)
+    }
 
     const directions = ['down', 'up', 'left', 'right']
     for (const direction of directions) {
       this.load.image(`player-${direction}`, `assets/generated/player-${direction}.png`)
-      this.load.image(`yuna-${direction}`, `assets/generated/yuna-${direction}.png`)
-      this.load.image(`minsu-${direction}`, `assets/generated/minsu-${direction}.png`)
-      this.load.image(`jihoon-${direction}`, `assets/generated/jihoon-${direction}.png`)
-      this.load.image(`sora-${direction}`, `assets/generated/sora-${direction}.png`)
+      for (const prefix of npcSpritePrefixes) {
+        this.load.image(`${prefix}-${direction}`, `assets/generated/${prefix}-${direction}.png`)
+      }
     }
   }
 
   create() {
+    playMusic(this, 'town-hub')
     this.registry.set('mobileInput', { x: 0, y: 0 })
     this.physics.world.setBounds(0, 0, MAP_W, MAP_H)
 
